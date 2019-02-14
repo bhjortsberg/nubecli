@@ -62,9 +62,9 @@ def start_node(driver, args):
         print({e})
 
 def main():
-    argp = argparse.ArgumentParser(description="List nodes in cloud")
-    sargp = argp.add_subparsers(help="command help")
-    list_parser = sargp.add_parser('list', help="List nodes")
+    argp = argparse.ArgumentParser(description="Manages nodes in cloud")
+    sargp = argp.add_subparsers(title="Available commands", metavar="Command", help="Description", dest='command')
+    list_parser = sargp.add_parser('list', help="List nodes (default)")
     list_parser.set_defaults(func=list_nodes)
     stop_parser = sargp.add_parser('stop', help="Stop nodes")
     stop_parser.add_argument('node', help="Node name")
@@ -78,7 +78,10 @@ def main():
     access_key_id, access_key = read_aws_credentials()
     driver = get_cloud_driver(access_key_id, access_key)
 
-    args.func(driver, args)
+    if args.command:
+        args.func(driver, args)
+    else:
+        list_nodes(driver, args)
 
 if __name__ == "__main__":
     main()
