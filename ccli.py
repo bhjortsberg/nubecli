@@ -3,6 +3,7 @@ from pathlib import Path
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
 from libcloud.compute.base import NodeImage
+from libcloud.compute.base import NodeAuthSSHKey
 
 
 def get_cloud_driver(access_key_id, access_key):
@@ -45,6 +46,7 @@ def stop_node(driver, args):
     try:
        for node in nodes:
            if name == node.name:
+               print("Stopping node...")
                driver.ex_stop_node(node)
     except Exception as e:
         print({e})
@@ -57,6 +59,7 @@ def start_node(driver, args):
     try:
         for node in nodes:
             if name == node.name:
+                print("Starting node...")
                 driver.ex_start_node(node)
     except Exception as e:
         print({e})
@@ -72,8 +75,47 @@ def create_node(driver, args):
 
     # Need a NodeImage 
     # https://libcloud.readthedocs.io/en/latest/compute/api.html#libcloud.compute.base.NodeImage
-    image = NodeImage(driver=driver, name=args.image_name)
-    driver.create_node(ex_assign_public_ip=True, image=image, size=10)
+    image = driver.list_images(ex_filters={'name': args.image_name})
+    locations=driver.list_locations()
+    while True:
+        node_type = input("Node type (l for list of types): ")
+        if node_type == 'l':
+            size_list = (size.id for size in driver.list_sizes(location=locations[0]))
+            for size in size_list:
+                print(size)
+        else:
+            break
+    sizes = [size for size in driver.list_sizes() if size.id == node_type]
+    print(sizes)
+
+
+    while True:
+        key_pair = input("Key pair (l for list for key pairs): ")
+        if key_pair == 'l':
+            key_list = (key.name for key in driver.list_key_pairs())
+            for key in key_list:
+                print(key)
+        else:
+            break
+
+    keys = [key for key in driver.list_key_pairs() if key.name == key_pair]
+    #key = Path(key_file)
+
+    #ssh_key = driver.import_key_pair_from_file('master-key', '/home/bjorn/.aws/master-key.PEM')
+    #with open(key_file) as f:
+    #    key_data = f.read()
+        #auth = NodeAuthSSHKey(key_data)
+        #ssh_key = driver.import_key_pair_from_string('master-key', key_data)
+    #    ssh_key = key_data
+    print(keys[0])
+    name = input('Node name: ')
+    try:
+        print("Creating node...")
+        driver.create_node(name=name, ssh_key=keys[0].fingerprint, ex_assign_public_ip=True, image=image[0], size=sizes[0])
+        print("Node created!")
+    except Exception as e:
+        print({e})
+
 
 def main():
     argp = argparse.ArgumentParser(description="Manages nodes in cloud")
