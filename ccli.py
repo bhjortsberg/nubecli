@@ -64,7 +64,7 @@ def start_node(driver, args):
 def search_image(driver, args):
 
     image_name = args.image_name.lower()
-    images = (im for im in driver.list_images() if im.name and image_name in im.name.lower())
+    images = driver.list_images(ex_filters={'name': image_name})
     for image in images:
         print(image.name)
 
@@ -80,7 +80,7 @@ def main():
     start_parser.add_argument('node', help="Node name")
     start_parser.set_defaults(func=start_node)
     search_parser = sargp.add_parser('search', help="Search images matching name")
-    search_parser.add_argument('image_name', help="Image name to search for")
+    search_parser.add_argument('image_name', help="Image name to search for, wildcards allowed")
     search_parser.set_defaults(func=search_image)
 
     args = argp.parse_args()
