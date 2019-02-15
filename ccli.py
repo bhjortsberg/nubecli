@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
-
+from libcloud.compute.base import NodeImage
 
 
 def get_cloud_driver(access_key_id, access_key):
@@ -68,6 +68,13 @@ def search_image(driver, args):
     for image in images:
         print(image.name)
 
+def create_node(driver, args):
+
+    # Need a NodeImage 
+    # https://libcloud.readthedocs.io/en/latest/compute/api.html#libcloud.compute.base.NodeImage
+    image = NodeImage(driver=driver, name=args.image_name)
+    driver.create_node(ex_assign_public_ip=True, image=image, size=10)
+
 def main():
     argp = argparse.ArgumentParser(description="Manages nodes in cloud")
     sargp = argp.add_subparsers(title="Available commands", metavar="Command", help="Description", dest='command')
@@ -82,6 +89,9 @@ def main():
     search_parser = sargp.add_parser('search', help="Search images matching name")
     search_parser.add_argument('image_name', help="Image name to search for, wildcards allowed")
     search_parser.set_defaults(func=search_image)
+    create_parser = sargp.add_parser('create', help="Create node")
+    create_parser.add_argument("image_name", help="Image name")
+    create_parser.set_defaults(func=create_node)
 
     args = argp.parse_args()
 
