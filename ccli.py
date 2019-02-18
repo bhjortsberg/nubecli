@@ -78,7 +78,7 @@ def create_node(driver, args):
     image = driver.list_images(ex_filters={'name': args.image_name})
     locations=driver.list_locations()
     while True:
-        node_type = input("Node type (l for list of types): ")
+        node_type = input("Node size (l for list of size types): ")
         if node_type == 'l':
             size_list = (size.id for size in driver.list_sizes(location=locations[0]))
             for size in size_list:
@@ -98,20 +98,10 @@ def create_node(driver, args):
         else:
             break
 
-    keys = [key for key in driver.list_key_pairs() if key.name == key_pair]
-    #key = Path(key_file)
-
-    #ssh_key = driver.import_key_pair_from_file('master-key', '/home/bjorn/.aws/master-key.PEM')
-    #with open(key_file) as f:
-    #    key_data = f.read()
-        #auth = NodeAuthSSHKey(key_data)
-        #ssh_key = driver.import_key_pair_from_string('master-key', key_data)
-    #    ssh_key = key_data
-    print(keys[0])
     name = input('Node name: ')
     try:
-        print("Creating node...")
-        driver.create_node(name=name, ssh_key=keys[0].fingerprint, ex_assign_public_ip=True, image=image[0], size=sizes[0])
+        print(f"Creating node \"{name}\"...")
+        driver.create_node(name=name, ex_keyname=key_pair, ex_assign_public_ip=True, image=image[0], size=sizes[0])
         print("Node created!")
     except Exception as e:
         print({e})
