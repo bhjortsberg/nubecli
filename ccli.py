@@ -28,7 +28,7 @@ def list_nodes(driver, args):
     
     nodes = driver.list_nodes()
     heading=["Node","IPs","State","Created"]
-    row_fmt = "{:<8}{:<35}{:<18}{:<10}{:<25}"
+    row_fmt = "{:<8}{:<35}{:<18}{:<11}{:<25}"
     print(row_fmt.format("Count", *heading))
 
     count = 1
@@ -61,6 +61,24 @@ def start_node(driver, args):
             if name == node.name:
                 print("Starting node...")
                 driver.ex_start_node(node)
+    except Exception as e:
+        print({e})
+
+def delete_node(driver, args):
+
+    nodes = driver.list_nodes()
+    name = args.node
+    ans = input(("This will delete the node, all data will be lost."
+                " Are you sure you want to delete:") + f" \"{name}\" (y/n): ")
+    if 'n' in ans:
+        print("Ok, not doing anything!")
+        return
+
+    try:
+       for node in nodes:
+           if name == node.name:
+               print("Deleting node...")
+               driver.destroy_node(node)
     except Exception as e:
         print({e})
 
@@ -112,18 +130,26 @@ def main():
     sargp = argp.add_subparsers(title="Available commands", metavar="Command", help="Description", dest='command')
     list_parser = sargp.add_parser('list', help="List nodes (default)")
     list_parser.set_defaults(func=list_nodes)
-    stop_parser = sargp.add_parser('stop', help="Stop nodes")
-    stop_parser.add_argument('node', help="Node name")
-    stop_parser.set_defaults(func=stop_node)
-    start_parser = sargp.add_parser('start', help="Start nodes")
-    start_parser.add_argument('node', help="Node name")
-    start_parser.set_defaults(func=start_node)
+
     search_parser = sargp.add_parser('search', help="Search images matching name")
     search_parser.add_argument('image_name', help="Image name to search for, wildcards allowed")
     search_parser.set_defaults(func=search_image)
+
     create_parser = sargp.add_parser('create', help="Create node")
     create_parser.add_argument("image_name", help="Image name")
     create_parser.set_defaults(func=create_node)
+
+    start_parser = sargp.add_parser('start', help="Start nodes")
+    start_parser.add_argument('node', help="Node name")
+    start_parser.set_defaults(func=start_node)
+
+    stop_parser = sargp.add_parser('stop', help="Stop nodes")
+    stop_parser.add_argument('node', help="Node name")
+    stop_parser.set_defaults(func=stop_node)
+
+    delete_parser = sargp.add_parser('delete', help="Delete nodes")
+    delete_parser.add_argument('node', help="Node name")
+    delete_parser.set_defaults(func=delete_node)
 
     args = argp.parse_args()
 
