@@ -130,18 +130,23 @@ def main():
     sargp = argp.add_subparsers(title="Available commands", metavar="Command", help="Description", dest='command')
     list_parser = sargp.add_parser('list', help="List nodes (default)")
     list_parser.set_defaults(func=list_nodes)
-    stop_parser = sargp.add_parser('stop', help="Stop nodes")
-    stop_parser.add_argument('node', help="Node name")
-    stop_parser.set_defaults(func=stop_node)
-    start_parser = sargp.add_parser('start', help="Start nodes")
-    start_parser.add_argument('node', help="Node name")
-    start_parser.set_defaults(func=start_node)
+
     search_parser = sargp.add_parser('search', help="Search images matching name")
     search_parser.add_argument('image_name', help="Image name to search for, wildcards allowed")
     search_parser.set_defaults(func=search_image)
+
     create_parser = sargp.add_parser('create', help="Create node")
     create_parser.add_argument("image_name", help="Image name")
     create_parser.set_defaults(func=create_node)
+
+    start_parser = sargp.add_parser('start', help="Start nodes")
+    start_parser.add_argument('node', help="Node name")
+    start_parser.set_defaults(func=start_node)
+
+    stop_parser = sargp.add_parser('stop', help="Stop nodes")
+    stop_parser.add_argument('node', help="Node name")
+    stop_parser.set_defaults(func=stop_node)
+
     delete_parser = sargp.add_parser('delete', help="Delete nodes")
     delete_parser.add_argument('node', help="Node name")
     delete_parser.set_defaults(func=delete_node)
