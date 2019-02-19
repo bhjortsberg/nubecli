@@ -10,15 +10,26 @@ def get_cloud_driver(access_key_id, access_key):
     d = get_driver(Provider.EC2)
     return d(access_key_id,  access_key, region='eu-central-1')
 
-def read_aws_credentials():
+def read_aws_credentials(profile):
     credentials_file = Path.joinpath(Path.home(), Path(".aws/credentials"))
+    profile_found = False
+    access_key_id = None
+    access_key = None
     with open(credentials_file) as credentials:
         for line in credentials:
-            data = line.split(' = ')
-            if data[0].strip(' ') == 'aws_access_key_id':
-                access_key_id = data[1].strip('\n')
-            if data[0] == 'aws_secret_access_key':
-                access_key = data[1].strip('\n')
+            if profile_found:
+                data = line.split(' = ')
+                if data[0].strip(' ') == 'aws_access_key_id':
+                    access_key_id = data[1].strip('\n')
+                if data[0] == 'aws_secret_access_key':
+                    access_key = data[1].strip('\n')
+            if not profile_found:
+                profile_found = profile in line
+            if access_key_id and access_key:
+                break
+
+    if not (access_key_id and access_key):
+        raise Exception(f"Failed to read credentials from {credentials_file}")
 
     return access_key_id, access_key
 
@@ -128,6 +139,7 @@ def create_node(driver, args):
 def main():
     argp = argparse.ArgumentParser(description="Manages nodes in cloud")
     sargp = argp.add_subparsers(title="Available commands", metavar="Command", help="Description", dest='command')
+    argp.add_argument('--profile', default="default", help="Profile to use for credentials")
     list_parser = sargp.add_parser('list', help="List nodes (default)")
     list_parser.set_defaults(func=list_nodes)
 
@@ -153,13 +165,16 @@ def main():
 
     args = argp.parse_args()
 
-    access_key_id, access_key = read_aws_credentials()
-    driver = get_cloud_driver(access_key_id, access_key)
+    try:
+        access_key_id, access_key = read_aws_credentials(args.profile)
+        driver = get_cloud_driver(access_key_id, access_key)
 
-    if args.command:
-        args.func(driver, args)
-    else:
-        list_nodes(driver, args)
+        if args.command:
+            args.func(driver, args)
+        else:
+            list_nodes(driver, args)
+    except Exception as e:
+        print({e})
 
 if __name__ == "__main__":
     main()
