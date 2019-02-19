@@ -2,7 +2,8 @@ import argparse
 from pathlib import Path
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
-
+from libcloud.compute.base import NodeImage
+from libcloud.compute.base import NodeAuthSSHKey
 
 
 def get_cloud_driver(access_key_id, access_key):
@@ -45,6 +46,7 @@ def stop_node(driver, args):
     try:
        for node in nodes:
            if name == node.name:
+               print("Stopping node...")
                driver.ex_stop_node(node)
     except Exception as e:
         print({e})
@@ -57,6 +59,7 @@ def start_node(driver, args):
     try:
         for node in nodes:
             if name == node.name:
+                print("Starting node...")
                 driver.ex_start_node(node)
     except Exception as e:
         print({e})
@@ -67,6 +70,42 @@ def search_image(driver, args):
     images = driver.list_images(ex_filters={'name': image_name})
     for image in images:
         print(image.name)
+
+def create_node(driver, args):
+
+    # Need a NodeImage 
+    # https://libcloud.readthedocs.io/en/latest/compute/api.html#libcloud.compute.base.NodeImage
+    image = driver.list_images(ex_filters={'name': args.image_name})
+    locations=driver.list_locations()
+    while True:
+        node_type = input("Node size (l for list of size types): ")
+        if node_type == 'l':
+            size_list = (size.id for size in driver.list_sizes(location=locations[0]))
+            for size in size_list:
+                print(size)
+        else:
+            break
+    sizes = [size for size in driver.list_sizes() if size.id == node_type]
+    print(sizes)
+
+
+    while True:
+        key_pair = input("Key pair (l for list for key pairs): ")
+        if key_pair == 'l':
+            key_list = (key.name for key in driver.list_key_pairs())
+            for key in key_list:
+                print(key)
+        else:
+            break
+
+    name = input('Node name: ')
+    try:
+        print(f"Creating node \"{name}\"...")
+        driver.create_node(name=name, ex_keyname=key_pair, ex_assign_public_ip=True, image=image[0], size=sizes[0])
+        print("Node created!")
+    except Exception as e:
+        print({e})
+
 
 def main():
     argp = argparse.ArgumentParser(description="Manages nodes in cloud")
@@ -82,6 +121,9 @@ def main():
     search_parser = sargp.add_parser('search', help="Search images matching name")
     search_parser.add_argument('image_name', help="Image name to search for, wildcards allowed")
     search_parser.set_defaults(func=search_image)
+    create_parser = sargp.add_parser('create', help="Create node")
+    create_parser.add_argument("image_name", help="Image name")
+    create_parser.set_defaults(func=create_node)
 
     args = argp.parse_args()
 
