@@ -6,7 +6,7 @@ env: requirements.txt
 
 install: env
 	./env/bin/python3 setup.py install
-	ln -s $(PWD)/env/bin/ccli $(HOME)/bin/
+	ln -sf $(PWD)/env/bin/ccli $(HOME)/bin/
 
 clean:
 	rm -rf ./env
