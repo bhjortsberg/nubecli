@@ -136,7 +136,10 @@ def configure(args, configuration):
 
     providers = config.get_providers()
 
-    input("Add provider (available: " [provider.name for provider in providers])
+    p = input("Add provider (available: " [provider.name for provider in providers])
+    new_configuration = providers[p].configure(configuration)
+
+    config.write_config(new_configuration)
 
     """
     providers = config.get_providers()
