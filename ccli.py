@@ -1,14 +1,11 @@
 import argparse
 from pathlib import Path
-from libcloud.compute.types import Provider
-from libcloud.compute.providers import get_driver
 from libcloud.compute.base import NodeImage
 from libcloud.compute.base import NodeAuthSSHKey
 
+from config import read_config, get_cloud_drivers
 
-def get_cloud_driver(access_key_id, access_key):
-    d = get_driver(Provider.EC2)
-    return d(access_key_id,  access_key, region='eu-central-1')
+
 
 def read_aws_credentials(profile):
     credentials_file = Path.joinpath(Path.home(), Path(".aws/credentials"))
@@ -135,6 +132,18 @@ def create_node(driver, args):
     except Exception as e:
         print({e})
 
+def configure(args, configuration):
+
+    providers = config.get_providers()
+
+    input("Add provider (available: " [provider.name for provider in providers])
+
+    """
+    providers = config.get_providers()
+
+    for provider in providers:
+        provider.
+    """
 
 def main():
     argp = argparse.ArgumentParser(description="Manages nodes in cloud")
@@ -163,16 +172,24 @@ def main():
     delete_parser.add_argument('node', help="Node name")
     delete_parser.set_defaults(func=delete_node)
 
+    config_parser = sargp.add_parser('config', help="Configure providers")
+    config_parser.set_defaults(func=configure)
+
     args = argp.parse_args()
 
-    try:
-        access_key_id, access_key = read_aws_credentials(args.profile)
-        driver = get_cloud_driver(access_key_id, access_key)
+    configuration = read_config()
+    
+    if args.command == "config"
+        configure(args, configuration)
 
-        if args.command:
-            args.func(driver, args)
-        else:
-            list_nodes(driver, args)
+    try:
+        drivers = get_cloud_drivers(config)
+
+        for driver in drivers:
+            if args.command:
+                args.func(driver, args)
+            else:
+                list_nodes(driver, args)
     except Exception as e:
         print({e})
 
