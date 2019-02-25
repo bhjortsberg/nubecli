@@ -79,12 +79,28 @@ def config_aws(configuration):
         providers = configuration['providers']
         providers.append(provider)
 
-    print("Configure AWS:")
-    profile_name = input('Profile name: ')
+    print("Configure AWS profiles:")
+    while True:
+        profile_name = input('Profile name (l to list existing profiles): ')
+        if profile_name == 'l':
+            profiles_str = ", ".join([p['name'] for p in provider['profiles']])
+            print("Profiles: " + profiles_str + "\n")
+        else:
+            break
+
     p = [profile for profile in provider['profiles'] if profile['name'] == profile_name]
     if len(p) > 0:
         profile = p[0]
-        new_profile = False
+        ans = input("Profile exists overwrite, delete or cancel (o,d,c)? ")
+        if ans == 'o':
+            new_profile = False
+        elif ans == 'd':
+            provider['profiles'].remove(profile)
+            return configuration
+        elif ans == 'c':
+            # Need to remove the provider again
+            return configuration
+
     else:
         profile = {'name': profile_name}
         new_profile = True
