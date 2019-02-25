@@ -3,7 +3,9 @@ from pathlib import Path
 from libcloud.compute.base import NodeImage
 from libcloud.compute.base import NodeAuthSSHKey
 
-from config import read_config, get_cloud_drivers
+from config import (read_config, write_config,
+                    get_cloud_drivers, get_providers,
+                    configure_provider)
 
 
 
@@ -70,7 +72,7 @@ def start_node(driver, args):
                 print("Starting node...")
                 driver.ex_start_node(node)
     except Exception as e:
-        print({e})
+        print(f"{e}")
 
 def delete_node(driver, args):
 
@@ -88,7 +90,7 @@ def delete_node(driver, args):
                print("Deleting node...")
                driver.destroy_node(node)
     except Exception as e:
-        print({e})
+        print(f"{e}")
 
 def search_image(driver, args):
 
@@ -130,23 +132,28 @@ def create_node(driver, args):
         driver.create_node(name=name, ex_keyname=key_pair, ex_assign_public_ip=True, image=image[0], size=sizes[0])
         print("Node created!")
     except Exception as e:
-        print({e})
+        print(f"{e}")
 
 def configure(args, configuration):
 
-    providers = config.get_providers()
+    providers = get_providers()
 
-    p = input("Add provider (available: " [provider.name for provider in providers])
-    new_configuration = providers[p].configure(configuration)
+    while True:
+        p = input("Add provider (l to list available providers): ")
+        if p == 'l':
+            print("Available providers:\n%s\n" % ", ".join([provider for provider in providers]))
+            continue
 
-    config.write_config(new_configuration)
+        new_configuration = configure_provider(p, configuration)
+        if not new_configuration:
+            # Perhaps raise instead
+            print(f"Failed to configure provider \"{p}\"")
+            return
+        write_config(new_configuration)
+        ans = input('Configure/modify more provider(s)? (y/n): ')
+        if ans != 'y':
+            break
 
-    """
-    providers = config.get_providers()
-
-    for provider in providers:
-        provider.
-    """
 
 def main():
     argp = argparse.ArgumentParser(description="Manages nodes in cloud")
@@ -182,19 +189,19 @@ def main():
 
     configuration = read_config()
     
-    if args.command == "config"
+    if not configuration or args.command == "config":
         configure(args, configuration)
+        return
 
     try:
-        drivers = get_cloud_drivers(config)
-
+        drivers = get_cloud_drivers(configuration)
         for driver in drivers:
             if args.command:
                 args.func(driver, args)
             else:
                 list_nodes(driver, args)
     except Exception as e:
-        print({e})
+        print(f"{e}")
 
 if __name__ == "__main__":
     main()
