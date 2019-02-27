@@ -62,9 +62,11 @@ provider_driver = \
      'digital_ocean': get_digital_ocean_driver
     }
 
+
 def get_configuration(configuration, provider_name):
     p = [provider for provider in configuration['providers'] if provider['name'] == provider_name]
     return p[0]
+
 
 def config_aws(configuration):
     try:
@@ -80,69 +82,16 @@ def config_aws(configuration):
         providers.append(provider)
 
     print("Configure AWS profiles:")
-    while True:
-        profile_name = input('Profile name (l to list existing profiles): ')
-        if profile_name == 'l':
-            profiles_str = ", ".join([p['name'] for p in provider['profiles']])
-            print("Profiles: " + profiles_str + "\n")
-        else:
-            break
+    def config_data():
+        access_key_id = input('access key id: ')
+        secret_access_key = input('secret access key: ')
+        data = {'access_key_id': access_key_id, 'secret_access_key': secret_access_key}
+        return data
 
-    p = [profile for profile in provider['profiles'] if profile['name'] == profile_name]
-    if len(p) > 0:
-        profile = p[0]
-        ans = input("Profile exists overwrite, delete or cancel (o,d,c)? ")
-        if ans == 'o':
-            new_profile = False
-        elif ans == 'd':
-            provider['profiles'].remove(profile)
-            return configuration
-        elif ans == 'c':
-            # Need to remove the provider again
-            return configuration
-
-    else:
-        profile = {'name': profile_name}
-        new_profile = True
-
-    access_key_id = input('access key id: ')
-    secret_access_key = input('secret access key: ')
-    profile['data'] = {'access_key_id': access_key_id, 'secret_access_key': secret_access_key}
-    if new_profile:
-        provider['profiles'].append(profile)
+    configure_profiles(provider, config_data)
 
     return configuration
 
-
-def configure_profiles(provider):
-    while True:
-        profile_name = input('Profile name (l to list existing profiles): ')
-        if profile_name == 'l':
-            profiles_str = ", ".join([p['name'] for p in provider['profiles']])
-            print("Profiles: " + profiles_str + "\n")
-        else:
-            break
-
-    new_profile = False
-    abort = False
-    p = [profile for profile in provider['profiles'] if profile['name'] == profile_name]
-    if len(p) > 0:
-        profile = p[0]
-        ans = input("Profile exists overwrite, delete or cancel (o,d,c)? ")
-        if ans == 'o':
-            pass
-        elif ans == 'd':
-            provider['profiles'].remove(profile)
-            abort = True
-        elif ans == 'c':
-            # Need to remove the provider again
-            abort = True
-
-    else:
-        profile = {'name': profile_name}
-        new_profile = True
-
-    return profile, new_profile, abort
 
 def config_digital_ocean(configuration):
     try:
@@ -159,18 +108,45 @@ def config_digital_ocean(configuration):
 
 
     print("Configure DigitalOcean:")
-    # TODO: Pass data = {'access_token': access_token } to configure_profile(provider, data)
-    # return profile and if needed cancel
-    profile, append_profile, cancel = configure_profiles(provider)
-    if cancel:
-        return configuration
+    def config_data():
+        access_token = input('access token: ')
+        data = {'access_token': access_token}
+        return data
 
-    access_token = input('access token: ')
-    profile['data'] = {'access_token': access_token}
-    if append_profile:
-        provider['profiles'].append(profile)
+    configure_profiles(provider, config_data)
 
     return configuration
+
+
+def configure_profiles(provider, config_data):
+    while True:
+        profile_name = input('Profile name (l to list existing profiles): ')
+        if profile_name == 'l':
+            profiles_str = ", ".join([p['name'] for p in provider['profiles']])
+            print("Profiles: " + profiles_str + "\n")
+        else:
+            break
+
+    p = [profile for profile in provider['profiles'] if profile['name'] == profile_name]
+    if len(p) > 0:
+        profile = p[0]
+        ans = input("Profile exists. Overwrite, delete or cancel (o,d,c)? ")
+        if ans == 'o':
+            profile['data'] = config_data()
+        elif ans == 'd':
+            provider['profiles'].remove(profile)
+        elif ans == 'c':
+            # Need to remove the provider again
+            #abort = True
+            pass
+
+    else:
+        # This profile did not exist, create one
+        data = config_data()
+        profile = {'name': profile_name, 'data': data}
+        # and append to providers profiles
+        provider['profiles'].append(profile)
+
 
 provider_config = \
     {
