@@ -41,8 +41,8 @@ def get_aws_driver(aws_config):
         data = profile['data']
         access_key_id = data['access_key_id']
         secret_access_key = data["secret_access_key"]
-        # TODO: how to handle region, part of config?
-        drivers.append(d(access_key_id, secret_access_key, region='eu-central-1'))
+        default_region = data["default_region"]
+        drivers.append(d(access_key_id, secret_access_key, region=default_region))
 
     return drivers
 
@@ -85,7 +85,12 @@ def config_aws(configuration):
     def config_data():
         access_key_id = input('access key id: ')
         secret_access_key = input('secret access key: ')
-        data = {'access_key_id': access_key_id, 'secret_access_key': secret_access_key}
+        default_region = input('default region: ')
+        data = {
+            'access_key_id': access_key_id,
+            'secret_access_key': secret_access_key,
+            'default_region': default_region
+            }
         return data
 
     configure_profiles(provider, config_data)
