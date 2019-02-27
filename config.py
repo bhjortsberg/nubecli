@@ -113,28 +113,61 @@ def config_aws(configuration):
 
     return configuration
 
-def config_digital_ocean(configuration):
-    try:
-        provider = get_configuration(configuration, 'digital_ocean')
-    except (KeyError,TypeError,IndexError) as e:
-        # No config exists, add a default one with empty profile
-        provider = {'name':'digital_ocean', 'profiles': []}
-        configuration = {'providers': [provider]}
 
+def configure_profiles(provider):
+    while True:
+        profile_name = input('Profile name (l to list existing profiles): ')
+        if profile_name == 'l':
+            profiles_str = ", ".join([p['name'] for p in provider['profiles']])
+            print("Profiles: " + profiles_str + "\n")
+        else:
+            break
 
-    print("Configure DigitalOcean:")
-    profile_name = input('Profile name: ')
+    new_profile = False
+    abort = False
     p = [profile for profile in provider['profiles'] if profile['name'] == profile_name]
     if len(p) > 0:
         profile = p[0]
-        new_profile = False
+        ans = input("Profile exists overwrite, delete or cancel (o,d,c)? ")
+        if ans == 'o':
+            pass
+        elif ans == 'd':
+            provider['profiles'].remove(profile)
+            abort = True
+        elif ans == 'c':
+            # Need to remove the provider again
+            abort = True
+
     else:
         profile = {'name': profile_name}
         new_profile = True
 
+    return profile, new_profile, abort
+
+def config_digital_ocean(configuration):
+    try:
+        provider = get_configuration(configuration, 'digital_ocean')
+    except (KeyError,TypeError) as e:
+        # No config exists, add a default one with empty profile
+        provider = {'name':'digital_ocean', 'profiles': []}
+        configuration = {'providers': [provider]}
+    except IndexError as e:
+        # This provider does not exist, perhaps other does
+        provider = {'name':'digital_ocean', 'profiles': []}
+        providers = configuration['providers']
+        providers.append(provider)
+
+
+    print("Configure DigitalOcean:")
+    # TODO: Pass data = {'access_token': access_token } to configure_profile(provider, data)
+    # return profile and if needed cancel
+    profile, append_profile, cancel = configure_profiles(provider)
+    if cancel:
+        return configuration
+
     access_token = input('access token: ')
     profile['data'] = {'access_token': access_token}
-    if new_profile:
+    if append_profile:
         provider['profiles'].append(profile)
 
     return configuration
