@@ -34,12 +34,12 @@ def read_aws_credentials(profile):
 
 
 
-def list_nodes(driver, args):
+def list_nodes(drivers, args):
     
-    nodes = driver.list_nodes()
+    nodes = [node for driver in drivers for node in driver.list_nodes()]
     heading=["Node","IPs","State","Created"]
-    row_fmt = "{:<8}{:<35}{:<18}{:<11}{:<25}"
-    print(row_fmt.format("Count", *heading))
+    row_fmt = "{:<10}{:<35}{:<18}{:<11}{:<25}"
+    print(row_fmt.format("Provider", *heading))
 
     count = 1
 
@@ -49,9 +49,9 @@ def list_nodes(driver, args):
         print(row_fmt.format(f"{count}", *data))
         count += 1
 
-def stop_node(driver, args):
+def stop_node(drivers, args):
 
-    nodes = driver.list_nodes()
+    nodes = [node for driver in drivers for node in driver.list_nodes()]
     name = args.node
     try:
        for node in nodes:
@@ -63,7 +63,7 @@ def stop_node(driver, args):
 
 def start_node(driver, args):
 
-    nodes = driver.list_nodes()
+    nodes = [node for driver in drivers for node in driver.list_nodes()]
     name = args.node
 
     try:
@@ -76,7 +76,7 @@ def start_node(driver, args):
 
 def delete_node(driver, args):
 
-    nodes = driver.list_nodes()
+    nodes = [node for driver in drivers for node in driver.list_nodes()]
     name = args.node
     ans = input(("This will delete the node, all data will be lost."
                 " Are you sure you want to delete:") + f" \"{name}\" (y/n): ")
@@ -92,8 +92,11 @@ def delete_node(driver, args):
     except Exception as e:
         print(f"{e}")
 
-def search_image(driver, args):
+def search_image(drivers, args):
 
+    providers = get_providers()
+    provider_list = ", ".join([provider for provider in providers])
+    driver_name = input("Search on provider {provider_list}")
     image_name = args.image_name.lower()
     images = driver.list_images(ex_filters={'name': image_name})
     for image in images:
@@ -195,11 +198,10 @@ def main():
 
     try:
         drivers = get_cloud_drivers(configuration)
-        for driver in drivers:
-            if args.command:
-                args.func(driver, args)
-            else:
-                list_nodes(driver, args)
+        if args.command:
+            args.func(drivers, args)
+        else:
+            list_nodes(drivers, args)
     except Exception as e:
         print(f"{e}")
 
