@@ -95,13 +95,16 @@ def delete_node(drivers, args):
 
 def search_image(drivers, args):
 
-    providers = get_providers()
-    provider_list = ", ".join([provider for provider in providers])
-    driver_name = input("Search on provider {provider_list}")
-    image_name = args.image_name.lower()
-    images = driver.list_images(ex_filters={'name': image_name})
-    for image in images:
-        print(image.name)
+    driver_list = list(drivers)
+    provider_list = ", ".join([provider for _, provider in driver_list])
+    provider_name = input(f"Search on provider {provider_list}: ")
+    for driver, provider in driver_list:
+        if provider_name == provider:
+            image_name = args.image_name.lower()
+            images = driver.list_images(ex_filters={'name': image_name})
+            for image in images:
+                print(image.name)
+            break
 
 def create_node(driver, args):
 
