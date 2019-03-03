@@ -52,32 +52,32 @@ def list_nodes(drivers, args):
 
 def stop_node(drivers, args):
 
-    nodes = [node for driver,_ in drivers for node in driver.list_nodes()]
+    nodes = [(node, driver) for driver,_ in drivers for node in driver.list_nodes()]
     name = args.node
     try:
-       for node in nodes:
+       for node, driver in nodes:
            if name == node.name:
                print("Stopping node...")
                driver.ex_stop_node(node)
     except Exception as e:
         print({e})
 
-def start_node(driver, args):
+def start_node(drivers, args):
 
-    nodes = [node for driver, _ in drivers for node in driver.list_nodes()]
+    nodes = [(node, driver) for driver,_ in drivers for node in driver.list_nodes()]
     name = args.node
 
     try:
-        for node in nodes:
+        for node, driver in nodes:
             if name == node.name:
                 print("Starting node...")
                 driver.ex_start_node(node)
     except Exception as e:
         print(f"{e}")
 
-def delete_node(driver, args):
+def delete_node(drivers, args):
 
-    nodes = [node for driver, _ in drivers for node in driver.list_nodes()]
+    nodes = [(node, driver) for driver,_ in drivers for node in driver.list_nodes()]
     name = args.node
     ans = input(("This will delete the node, all data will be lost."
                 " Are you sure you want to delete:") + f" \"{name}\" (y/n): ")
@@ -86,7 +86,7 @@ def delete_node(driver, args):
         return
 
     try:
-       for node in nodes:
+       for node, driver in nodes:
            if name == node.name:
                print("Deleting node...")
                driver.destroy_node(node)
