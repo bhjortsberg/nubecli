@@ -29,32 +29,40 @@ def write_config(config):
 
 def get_cloud_drivers(config):
     drivers = []
+    provider_names = []
     for provider in config['providers']:
-        drivers += provider_driver[provider['name']](provider)
+        name = provider['name']
+        d, profiles = provider_driver[name](provider)
+        drivers += d
+        provider_names += [f"{name}:{p}" for p in profiles]
 
-    return drivers
+    return zip(drivers, provider_names)
 
 def get_aws_driver(aws_config):
     drivers = []
+    profiles = []
     d = get_driver(Provider.EC2)
     for profile in aws_config['profiles']:
+        profiles.append(profile['name'])
         data = profile['data']
         access_key_id = data['access_key_id']
         secret_access_key = data["secret_access_key"]
         default_region = data["default_region"]
         drivers.append(d(access_key_id, secret_access_key, region=default_region))
 
-    return drivers
+    return drivers, profiles
 
 def get_digital_ocean_driver(digital_ocean_config):
     drivers = []
+    profiles = []
     d = get_driver(Provider.DIGITAL_OCEAN)
     for profile in digital_ocean_config['profiles']:
+        profiles.append(profile['name'])
         data = profile['data']
         access_token = data['access_token']
         drivers.append(d(access_token, api_version='v2'))
 
-    return drivers
+    return drivers, profiles
 
 provider_driver = \
     {

@@ -35,23 +35,24 @@ def read_aws_credentials(profile):
 
 
 def list_nodes(drivers, args):
-    
-    nodes = [node for driver in drivers for node in driver.list_nodes()]
+
+    nodes = []
+    for driver, provider in drivers:
+        for node in driver.list_nodes():
+            nodes.append([node, provider])
+    # nodes = [node for driver in drivers for node in driver.list_nodes()]
     heading=["Node","IPs","State","Created"]
-    row_fmt = "{:<10}{:<35}{:<18}{:<11}{:<25}"
-    print(row_fmt.format("Provider", *heading))
+    row_fmt = "{:<12}{:<35}{:<18}{:<11}{:<25}"
+    print(row_fmt.format("Profile", *heading))
 
-    count = 1
-
-    for node in nodes:
+    for node, provider in nodes:
         ip = ",".join(ip for ip in node.public_ips)
         data = [node.name, ip, node.state, node.created_at.isoformat()]
-        print(row_fmt.format(f"{count}", *data))
-        count += 1
+        print(row_fmt.format(f"{provider}", *data))
 
 def stop_node(drivers, args):
 
-    nodes = [node for driver in drivers for node in driver.list_nodes()]
+    nodes = [node for driver,_ in drivers for node in driver.list_nodes()]
     name = args.node
     try:
        for node in nodes:
@@ -63,7 +64,7 @@ def stop_node(drivers, args):
 
 def start_node(driver, args):
 
-    nodes = [node for driver in drivers for node in driver.list_nodes()]
+    nodes = [node for driver, _ in drivers for node in driver.list_nodes()]
     name = args.node
 
     try:
@@ -76,7 +77,7 @@ def start_node(driver, args):
 
 def delete_node(driver, args):
 
-    nodes = [node for driver in drivers for node in driver.list_nodes()]
+    nodes = [node for driver, _ in drivers for node in driver.list_nodes()]
     name = args.node
     ans = input(("This will delete the node, all data will be lost."
                 " Are you sure you want to delete:") + f" \"{name}\" (y/n): ")
@@ -207,4 +208,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
