@@ -1,37 +1,10 @@
 import argparse
-from pathlib import Path
 from libcloud.compute.base import NodeImage
 from libcloud.compute.base import NodeAuthSSHKey
 
 from config import (read_config, write_config,
                     get_cloud_drivers, get_providers,
                     configure_provider)
-
-
-
-def read_aws_credentials(profile):
-    credentials_file = Path.joinpath(Path.home(), Path(".aws/credentials"))
-    profile_found = False
-    access_key_id = None
-    access_key = None
-    with open(credentials_file) as credentials:
-        for line in credentials:
-            if profile_found:
-                data = line.split(' = ')
-                if data[0].strip(' ') == 'aws_access_key_id':
-                    access_key_id = data[1].strip('\n')
-                if data[0] == 'aws_secret_access_key':
-                    access_key = data[1].strip('\n')
-            if not profile_found:
-                profile_found = profile in line
-            if access_key_id and access_key:
-                break
-
-    if not (access_key_id and access_key):
-        raise Exception(f"Failed to read credentials from {credentials_file}")
-
-    return access_key_id, access_key
-
 
 
 def list_nodes(drivers, args):
