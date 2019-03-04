@@ -106,11 +106,23 @@ def search_image(drivers, args):
                 print(image.name)
             break
 
-def create_node(driver, args):
+def create_node(drivers, args):
 
     # Need a NodeImage 
     # https://libcloud.readthedocs.io/en/latest/compute/api.html#libcloud.compute.base.NodeImage
-    image = driver.list_images(ex_filters={'name': args.image_name})
+    driver_list = list(drivers)
+    provider_list = ", ".join([provider for _, provider in driver_list])
+    provider_name = input(f"Create on provider:profile [{provider_list}]: ")
+
+    for driver, provider in driver_list:
+        if provider == provider_name:
+            d = driver
+            break
+
+    image = d.list_images(ex_filters={'name': args.image_name})
+    if len(image) == 0:
+        print("No such image {args.image_name}")
+
     locations=driver.list_locations()
     while True:
         node_type = input("Node size (l for list of size types): ")
@@ -121,8 +133,6 @@ def create_node(driver, args):
         else:
             break
     sizes = [size for size in driver.list_sizes() if size.id == node_type]
-    print(sizes)
-
 
     while True:
         key_pair = input("Key pair (l for list for key pairs): ")
