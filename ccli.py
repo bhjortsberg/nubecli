@@ -1,83 +1,56 @@
 import argparse
-from pathlib import Path
-from libcloud.compute.types import Provider
-from libcloud.compute.providers import get_driver
 from libcloud.compute.base import NodeImage
 from libcloud.compute.base import NodeAuthSSHKey
 
-
-def get_cloud_driver(access_key_id, access_key):
-    d = get_driver(Provider.EC2)
-    return d(access_key_id,  access_key, region='eu-central-1')
-
-def read_aws_credentials(profile):
-    credentials_file = Path.joinpath(Path.home(), Path(".aws/credentials"))
-    profile_found = False
-    access_key_id = None
-    access_key = None
-    with open(credentials_file) as credentials:
-        for line in credentials:
-            if profile_found:
-                data = line.split(' = ')
-                if data[0].strip(' ') == 'aws_access_key_id':
-                    access_key_id = data[1].strip('\n')
-                if data[0] == 'aws_secret_access_key':
-                    access_key = data[1].strip('\n')
-            if not profile_found:
-                profile_found = profile in line
-            if access_key_id and access_key:
-                break
-
-    if not (access_key_id and access_key):
-        raise Exception(f"Failed to read credentials from {credentials_file}")
-
-    return access_key_id, access_key
+from config import (read_config, write_config,
+                    get_cloud_drivers, get_providers,
+                    configure_provider)
 
 
+def list_nodes(drivers, args):
 
-def list_nodes(driver, args):
-    
-    nodes = driver.list_nodes()
+    nodes = []
+    for driver, provider in drivers:
+        for node in driver.list_nodes():
+            nodes.append([node, provider])
+    # nodes = [node for driver in drivers for node in driver.list_nodes()]
     heading=["Node","IPs","State","Created"]
-    row_fmt = "{:<8}{:<35}{:<18}{:<11}{:<25}"
-    print(row_fmt.format("Count", *heading))
+    row_fmt = "{:<12}{:<35}{:<18}{:<11}{:<25}"
+    print(row_fmt.format("Profile", *heading))
 
-    count = 1
-
-    for node in nodes:
+    for node, provider in nodes:
         ip = ",".join(ip for ip in node.public_ips)
         data = [node.name, ip, node.state, node.created_at.isoformat()]
-        print(row_fmt.format(f"{count}", *data))
-        count += 1
+        print(row_fmt.format(f"{provider}", *data))
 
-def stop_node(driver, args):
+def stop_node(drivers, args):
 
-    nodes = driver.list_nodes()
+    nodes = [(node, driver) for driver,_ in drivers for node in driver.list_nodes()]
     name = args.node
     try:
-       for node in nodes:
+       for node, driver in nodes:
            if name == node.name:
                print("Stopping node...")
                driver.ex_stop_node(node)
     except Exception as e:
         print({e})
 
-def start_node(driver, args):
+def start_node(drivers, args):
 
-    nodes = driver.list_nodes()
+    nodes = [(node, driver) for driver,_ in drivers for node in driver.list_nodes()]
     name = args.node
 
     try:
-        for node in nodes:
+        for node, driver in nodes:
             if name == node.name:
                 print("Starting node...")
                 driver.ex_start_node(node)
     except Exception as e:
-        print({e})
+        print(f"{e}")
 
-def delete_node(driver, args):
+def delete_node(drivers, args):
 
-    nodes = driver.list_nodes()
+    nodes = [(node, driver) for driver,_ in drivers for node in driver.list_nodes()]
     name = args.node
     ans = input(("This will delete the node, all data will be lost."
                 " Are you sure you want to delete:") + f" \"{name}\" (y/n): ")
@@ -86,25 +59,43 @@ def delete_node(driver, args):
         return
 
     try:
-       for node in nodes:
+       for node, driver in nodes:
            if name == node.name:
                print("Deleting node...")
                driver.destroy_node(node)
     except Exception as e:
-        print({e})
+        print(f"{e}")
 
-def search_image(driver, args):
+def search_image(drivers, args):
 
-    image_name = args.image_name.lower()
-    images = driver.list_images(ex_filters={'name': image_name})
-    for image in images:
-        print(image.name)
+    driver_list = list(drivers)
+    provider_list = ", ".join([provider for _, provider in driver_list])
+    provider_name = input(f"Search on provider {provider_list}: ")
+    for driver, provider in driver_list:
+        if provider_name == provider:
+            image_name = args.image_name.lower()
+            images = driver.list_images(ex_filters={'name': image_name})
+            for image in images:
+                print(image.name)
+            break
 
-def create_node(driver, args):
+def create_node(drivers, args):
 
     # Need a NodeImage 
     # https://libcloud.readthedocs.io/en/latest/compute/api.html#libcloud.compute.base.NodeImage
-    image = driver.list_images(ex_filters={'name': args.image_name})
+    driver_list = list(drivers)
+    provider_list = ", ".join([provider for _, provider in driver_list])
+    provider_name = input(f"Create on provider:profile [{provider_list}]: ")
+
+    for driver, provider in driver_list:
+        if provider == provider_name:
+            d = driver
+            break
+
+    image = d.list_images(ex_filters={'name': args.image_name})
+    if len(image) == 0:
+        print("No such image {args.image_name}")
+
     locations=driver.list_locations()
     while True:
         node_type = input("Node size (l for list of size types): ")
@@ -115,8 +106,6 @@ def create_node(driver, args):
         else:
             break
     sizes = [size for size in driver.list_sizes() if size.id == node_type]
-    print(sizes)
-
 
     while True:
         key_pair = input("Key pair (l for list for key pairs): ")
@@ -133,7 +122,27 @@ def create_node(driver, args):
         driver.create_node(name=name, ex_keyname=key_pair, ex_assign_public_ip=True, image=image[0], size=sizes[0])
         print("Node created!")
     except Exception as e:
-        print({e})
+        print(f"{e}")
+
+def configure(args, configuration):
+
+    providers = get_providers()
+
+    while True:
+        p = input("Add provider (l to list available providers): ")
+        if p == 'l':
+            print("Available providers:\n%s\n" % ", ".join([provider for provider in providers]))
+            continue
+
+        new_configuration = configure_provider(p, configuration)
+        if not new_configuration:
+            # Perhaps raise instead
+            print(f"Failed to configure provider \"{p}\"")
+            return
+        write_config(new_configuration)
+        ans = input('Configure/modify more provider(s)? (y/n): ')
+        if ans != 'y':
+            break
 
 
 def main():
@@ -163,19 +172,25 @@ def main():
     delete_parser.add_argument('node', help="Node name")
     delete_parser.set_defaults(func=delete_node)
 
+    config_parser = sargp.add_parser('config', help="Configure providers")
+    config_parser.set_defaults(func=configure)
+
     args = argp.parse_args()
 
-    try:
-        access_key_id, access_key = read_aws_credentials(args.profile)
-        driver = get_cloud_driver(access_key_id, access_key)
+    configuration = read_config()
+    
+    if not configuration or args.command == "config":
+        configure(args, configuration)
+        return
 
+    try:
+        drivers = get_cloud_drivers(configuration)
         if args.command:
-            args.func(driver, args)
+            args.func(drivers, args)
         else:
-            list_nodes(driver, args)
+            list_nodes(drivers, args)
     except Exception as e:
-        print({e})
+        print(f"{e}")
 
 if __name__ == "__main__":
     main()
-
