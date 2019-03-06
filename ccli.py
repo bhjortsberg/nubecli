@@ -2,9 +2,9 @@ import argparse
 from libcloud.compute.base import NodeImage
 from libcloud.compute.base import NodeAuthSSHKey
 
-from config import (read_config, write_config,
-                    get_cloud_drivers, get_providers,
-                    configure_provider)
+from config.config import (read_config, write_config,
+                           get_cloud_drivers, get_providers,
+                           configure_provider)
 
 
 def list_nodes(drivers, args):
@@ -33,7 +33,7 @@ def stop_node(drivers, args):
                print("Stopping node...")
                driver.ex_stop_node(node)
     except Exception as e:
-        print({e})
+        print(f"{e}")
 
 def start_node(drivers, args):
 
