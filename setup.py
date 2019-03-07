@@ -1,15 +1,15 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name="Cloud tool",
     version="0.2.0",
     description="Cloud command line tool",
     author="Bjorn Hjortsberg",
-    packages=find_packages(),
+    packages=[".", "config"],
     entry_points={
         'console_scripts': [
-            'ccli=ccli:main',
-        ],
+            'ccli = ccli:main',
+        ], 
     }
 )
 
