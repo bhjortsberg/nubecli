@@ -1,6 +1,8 @@
 from libcloud.compute.providers import get_driver
 from libcloud.compute.types import Provider
 
+from config.common import get_configuration, configure_profiles
+
 def get_aws_driver(aws_config):
     drivers = []
     profiles = []
