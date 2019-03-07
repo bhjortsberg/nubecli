@@ -148,7 +148,6 @@ def configure(args, configuration):
 def main():
     argp = argparse.ArgumentParser(description="Manages nodes in cloud")
     sargp = argp.add_subparsers(title="Available commands", metavar="Command", help="Description", dest='command')
-    argp.add_argument('--profile', default="default", help="Profile to use for credentials")
     list_parser = sargp.add_parser('list', help="List nodes (default)")
     list_parser.set_defaults(func=list_nodes)
 
