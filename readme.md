@@ -30,23 +30,22 @@ shows the available commands.
 
 ```
 $ nubecli -h
-usage: nubecli [-h] [--profile PROFILE] Command ...
+usage: nubecli [-h] Command ...
 
 Manages nodes in cloud
 
 optional arguments:
-  -h, --help         show this help message and exit
-  --profile PROFILE  Profile to use for credentials
+  -h, --help  show this help message and exit
 
 Available commands:
-  Command            Description
-    list             List nodes (default)
-    search           Search images matching name
-    create           Create node
-    start            Start nodes
-    stop             Stop nodes
-    delete           Delete nodes
-    config           Configure providers
+  Command     Description
+    list      List nodes (default)
+    search    Search images matching name
+    create    Create node
+    start     Start nodes
+    stop      Stop nodes
+    delete    Delete nodes
+    config    Configure providers
 ```
 
 # Configuration
