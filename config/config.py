@@ -6,7 +6,7 @@ from config.digital_ocean_config import (get_digital_ocean_driver,
                                          config_digital_ocean)
 
 
-CONFIG_FILE_FULL_PATH = Path.joinpath(Path.home(), Path(".config/ccli.conf"))
+CONFIG_FILE_FULL_PATH = Path.joinpath(Path.home(), Path(".config/nubecli.conf"))
 
 provider_driver = \
     {

@@ -6,8 +6,10 @@ env: requirements.txt
 
 install: env
 	./env/bin/python3 setup.py install
-	ln -sf $(PWD)/env/bin/ccli $(HOME)/bin/
+	ln -sf $(PWD)/env/bin/nubecli $(HOME)/bin/
 
 clean:
 	rm -rf ./env
-	rm -f $(HOME)/bin/ccli
+	rm -rf ./build
+	rm -rf ./dist
+	rm -f $(HOME)/bin/nubecli
