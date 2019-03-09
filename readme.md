@@ -25,7 +25,7 @@ $ make install
 
 # Usage
 
-The wanted operation is passed as a command to the tools. The help usage
+The wanted operation is passed as a command to the tool. The help usage
 shows the available commands.
 
 ```
@@ -46,6 +46,19 @@ Available commands:
     stop      Stop nodes
     delete    Delete nodes
     config    Configure providers
+```
+
+Every command has its own help.
+
+```
+$ nubecli search -h
+usage: nubecli search [-h] image_name
+
+positional arguments:
+  image_name  Image name to search for, wildcards allowed
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 # Configuration
@@ -95,12 +108,12 @@ Example: list nodes
 ```
 $ nubecli
 Profile               Node                     IPs               State      Created
-digital_ocean:default test-node                xxx.yyy.zz.xxx    running    2018-12-28T10:39:23+00:00
+digital_ocean:default test-node                111.222.33.44     running    2018-12-28T10:39:23+00:00
 ```
 
 
 # Why the name nubecli
 
-Nube is Spanish (and kind of also Latin) for cloud, this is then prepended with
-cli which of course is a short for Command Line Interface.
+Nube is Spanish for cloud, then prepended with cli which of course is a short
+for Command Line Interface.
 
