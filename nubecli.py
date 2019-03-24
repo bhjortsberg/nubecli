@@ -18,9 +18,10 @@ def list_nodes(drivers, args):
     row_fmt = "{:<12}{:<35}{:<18}{:<11}{:<25}"
     print(row_fmt.format("Profile", *heading))
 
+    date_format = '%Y-%m-%d %H:%M:%S'
     for node, provider in nodes:
         ip = ",".join(ip for ip in node.public_ips)
-        data = [node.name, ip, node.state, node.created_at.isoformat()]
+        data = [node.name, ip, node.state, node.created_at.strftime(date_format)]
         print(row_fmt.format(f"{provider}", *data))
 
 def stop_node(drivers, args):
