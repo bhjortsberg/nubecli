@@ -114,6 +114,6 @@ digital_ocean:default test-node                111.222.33.44     running    2018
 
 # Why the name nubecli
 
-Nube is Spanish for cloud, then prepended with cli which of course is a short
+Nube is Spanish for cloud, then appended with cli which of course is a short
 for Command Line Interface.
 
