@@ -1,7 +1,7 @@
 from libcloud.compute.providers import get_driver
 from libcloud.compute.types import Provider
 
-from config.common import get_configuration, configure_profiles
+from nubecli.config.common import get_configuration, configure_profiles
 
 def get_digital_ocean_driver(digital_ocean_config):
     drivers = []

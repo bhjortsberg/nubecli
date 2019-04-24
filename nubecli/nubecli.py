@@ -2,9 +2,9 @@ import argparse
 from libcloud.compute.base import NodeImage
 from libcloud.compute.base import NodeAuthSSHKey
 
-from config.config import (read_config, write_config,
-                           get_cloud_drivers, get_providers,
-                           configure_provider)
+from nubecli.config.config import (read_config, write_config,
+                                   get_cloud_drivers, get_providers,
+                                   configure_provider)
 
 
 def list_nodes(drivers, args):
